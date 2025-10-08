@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedy Snake Showdown</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .game-state {
+            font-size: 1.2rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .join-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .join-form input {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .join-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .join-form button:hover {
+            background: #45a049;
+        }
+
+        .join-form button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+            background: #000;
+        }
+
+        #gameCanvas {
+            display: block;
+            border-radius: 7px;
+        }
+
+        .scoreboard {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+
+        .scoreboard h3 {
+            margin-top: 0;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        .player-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .player-item.dead {
+            opacity: 0.5;
+            background: rgba(255,0,0,0.2);
+        }
+
+        .player-item.me {
+            background: rgba(255,215,0,0.3);
+            border: 1px solid #ffd700;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls h4 {
+            margin: 0 0 10px 0;
+            color: #ffd700;
+        }
+
+        .error-message {
+            background: rgba(255,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+
+        .leaderboard {
+            background: rgba(255,215,0,0.2);
+            border: 2px solid #ffd700;
+        }
+
+        .leaderboard .player-item {
+            background: rgba(255,215,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐍 Speedy Snake Showdown</h1>
+        
+        <div class="game-info">
+            <div class="timer" id="timer">60</div>
+            <div class="game-state" id="gameState">Connecting...</div>
+            <div class="join-form" id="joinForm">
+                <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+                <button id="joinButton" onclick="joinGame()">Join Game</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div class="game-area">
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="800" height="800"></canvas>
+                <div id="countdown" class="countdown" style="display: none;"></div>
+            </div>
+            
+            <div class="scoreboard">
+                <h3>Players</h3>
+                <ul id="playerList" class="player-list"></ul>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h4>Controls</h4>
+            <p>Use <strong>WASD</strong> or <strong>Arrow Keys</strong> to control your snake</p>
+            <p>Eat food to grow and score points!</p>
+        </div>
+    </div>
+
+    <script src="shared/constants.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
